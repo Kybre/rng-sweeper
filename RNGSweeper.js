@@ -21,6 +21,7 @@ for(let i = 0; i < tiles.length; i++){
   for(let j = 0; j < tiles[i].length; j++){
     tiles[i][j] = {
       revealed: false,
+      flagged: false,
       cell: undefined,
       mine: undefined,
       img: undefined,
@@ -101,29 +102,16 @@ function defaultBoardInit(){
   replaceImages();
 }
 
-function moveMines(){
-  /*  for(let i = 0; i < mines.length; i++){
-    tiles[mines[i].column][mines[i].row].mine = mines[i]; //add the piece to the tile object
-    let tile = tiles[mines[i].column][mines[i].row].cell; //html element
-
-    while(tile.hasChildNodes()){ //get rid of all current elements to add image
-      tile.removeChild(tile.lastChild);
-    }
-    if(tiles[mines[i].column][mines[i].row].mine.visible == true){
-      //console.log(mines[i].img); //debug
-      tile.appendChild(mines[i].img); //add the current piece image to the tile
-    }
-  }
-  */
-  for(let i = 0; i < mines.length; i++){
-    let tile = tiles[mines[i].column][mines[i].row].cell;
-    if(tile.classList.contains('flag') == false){
-      mineX = Math.floor(Math.random()*g.BOARD_X + 1);
-      mineY = Math.floor(Math.random()*g.BOARD_Y + 1);
-      mines[i].row = mineY;
-      mines[i].column = mineX;
-   }
-  }
+function setMine(mine,x,y){
+  /* console.log('mine:');
+  console.log('mine.column:' + mine.column);
+  console.log('mine.row:' + mine.row);
+  console.log('x:' + x);
+  console.log('y:' + y);
+  console.log('tiles[x][y].mine:' + mine.column);*/
+  mine.column = x;
+  mine.row = y;
+  tiles[x][y].mine = mine;
 }
 
 function replaceImages(){
@@ -151,21 +139,41 @@ function replaceImages(){
 }
 
 function revealPiece(x,y){ //reveals single tile
+  replaceImages();
   let tile = tiles[x][y];
-  tile.revealed = true;
   if(tile.mine != undefined){
+    tile.revealed = true;
     tile.mine.visible = true;
     tile.cell.classList.remove('bg');
     tile.cell.classList.add('trip');
     gameOver();
   }
-  else if(tile.cell.classList.contains('flag') == false && tile.mine == undefined){
+  else if(tile.flagged == false && tile.cell.classList.contains('reveal') == false && tile.mine == undefined){
+    tile.revealed = true;
     tile.cell.classList.remove('bg');
     tile.cell.classList.add('reveal');
-    moveMines();
-    if(g.BOARD_X * g.BOARD_Y - mines.length == countRevealed())gameWin();
+    //reveal adjacent
+
+    //randomly move mines
+    let moveCount = 0;
+    for(let i = 0; i < mines.length; i++){ //loop for all mines
+    mineX = Math.floor(Math.random()*g.BOARD_X); //pick random coordinates
+    mineY = Math.floor(Math.random()*g.BOARD_Y);
+    if(g.BOARD_X * g.BOARD_Y - countRevealed() - mines.length > moveCount){ //bypass infinite loop - if there are no tiles to move to, don't move the mines
+      if(x == mineX && y == mineY) i--; //cannot pick the tile clicked
+      else if (tiles[mineX][mineY].mine != undefined)i--; //cannot have an existing mine
+      else if(tiles[mineX][mineY].revealed == true)i--; //cannot be previously revealed tile
+      else if(tiles[mineX][mineY].cell.classList.contains('flag') == false){ //if flagged, don't move mine
+          tiles[mines[i].column][mines[i].row].mine = undefined; //set the mine on its previous tile to undefined
+          setMine(mines[i],mineX,mineY); //move mine
+          moveCount++;
+        }
+      replaceImages();
+      }
+    }
   }
   replaceImages();
+  if(g.BOARD_X * g.BOARD_Y - mines.length == countRevealed())gameWin();
 }
 
 function countRevealed(){
@@ -202,32 +210,33 @@ function toggleHide(){ //toggles if mines are hidden, debugging
 
 function checkAdj(x,y){
   let adjMineCount = 0;
-  try{
     for(let i = x-1; i < x+2; i++){
-      if(i < 0)i++;
       for(let j = y-1; j < y+2; j++){
-        if(j < 0)j++;
-        if(tiles[i][j].mine != undefined){
-          adjMineCount++;
+        if(tiles[i] != undefined){
+          if(tiles[i][j] != undefined){
+            if(tiles[i][j].mine != undefined){
+              adjMineCount++;
+            }
+          }
         }
       }
     }
-  } catch(e){}
   return adjMineCount;
 }
 
 function revealAdj(x,y){ //reveals adjacent tiles
-  try{ //used because last row will be revealed before console error is shown
     for(let i = x-1; i < x+2; i++){
-      if(i < 0)i++;
       for(let j = y-1; j < y+2; j++){
-        if(j < 0)j++;
-        if(tiles[i][j].mine == undefined){ //if there are no adjacent mines, reveal surroundings
-          revealPiece(i,j);
+        if(tiles[i] != undefined){
+          if(tiles[i][j] != undefined){
+            if(tiles[i][j].mine == undefined){ //if there are no adjacent mines, reveal surroundings
+              revealPiece(i,j);
+              replaceImages();
+            }
+          }
         }
       }
     }
-  } catch(e){}
 }
 
 function flagPiece(x,y){ // flags single tile
@@ -235,10 +244,12 @@ function flagPiece(x,y){ // flags single tile
   if(tile.cell.classList.contains('flag')){
     tile.cell.classList.remove('flag');
     tile.cell.classList.add('bg');
+    tile.flagged = false;
   }
   else {
     tile.cell.classList.remove('bg');
     tile.cell.classList.add('flag');
+    tile.flagged = true;
   }
   replaceImages();
 }
