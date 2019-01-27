@@ -1,32 +1,30 @@
 //Board:
 let mines = new Array(); //list of all mines
 let highlightedCells = new Array();
-let level = 1;
-let firstClick = true;
+let level = 1; //level
+let firstClick = true; //boolean for the user's first click on a level
 //Timer:
 duration = 300;
 function startTimer(g){
   document.getElementById("time").innerHTML = '<strong>Time Remaining:</strong><br />05:00';
   duration--; //buffer for actual time
-  let timer = setInterval(function(){
+  let timer = setInterval(function(){ //sets function to be ran once every 1000 milliseconds
     let min = parseInt(duration / 60, 10);
-    if(min < 10) min = '0' + min;
+    if (min < 10) min = '0' + min;
     else if (min <= 0) min = '00'
     let sec = parseInt(duration % 60, 10);
-    if(sec < 10) sec = '0' + sec;
+    if (sec < 10) sec = '0' + sec;
     else if (sec <= 0) sec = '00'
-    document.getElementById("time").innerHTML = '<strong>Time Remaining:</strong><br />' + min + ':' + sec;
-    if(duration == 0){
+    document.getElementById("time").innerHTML = '<strong>Time Remaining:</strong><br />' + min + ':' + sec; //set HTML text
+    if(duration == 0){ //if timer runs out, game over and stops timer
       gameOver();
       clearInterval(timer);
     }
-    if(g.end == false){
-      duration--;
-    }
+    duration--; //-1 second every time this function is ran
   }, 1000);
 }
 //game state controller
-function Game(bSize, diff){
+function Game(bSize, diff){//Game Object
   this.BOARD_X = bSize;
   this.BOARD_Y = bSize;
   this.DIFF = 0.25;
@@ -56,7 +54,7 @@ for(let i = 0; i < tiles.length; i++){
   }
 } //2d array of length boardSize for holding the tile and mine in each position, tiles[x][y].
 
-function initNew(game){
+function initNew(game){ //initialize new level
   //add new row/column
   let playboard = document.getElementById("playboard");
   let bgboard = document.getElementById("bgboard");
@@ -79,7 +77,7 @@ function initNew(game){
   firstClick = true;
 }
 
-function resetTiles(game){
+function resetTiles(game){ //reset all existing tiles
   //redeclare variables
   tiles = new Array(game.BOARD_X);
   bg = new Array(game.BOARD_X);
@@ -107,21 +105,15 @@ function resetTiles(game){
     for(let x = 0; x < game.BOARD_X; x++){
       let pcell = prow.cells[x];
       let bcell = brow.cells[x];
+      //reduce cell size based on size of board
       let cW = 70/game.BOARD_Y; //cell width
       let cH = 87.5/game.BOARD_X; // cell height
-      /* console.log('cell width: ' + cW); //debugging
-      console.log('cell height: ' + cH); */
       pcell.style.width = cW + 'vh';
       pcell.style.height = cH + 'vh';
       bcell.style.width = cW + 'vh';
       bcell.style.height = cH + 'vh';
-      //playboard
       setPlayCell(pcell,x,y);
-      //bg
       setBGCell(bcell,x,y);
-      /* bg[x][y].cell = bcell;
-      bcell.classList.add('bg');//set color
-      bcell.id = x+','+y; */
     }
   }
 }
@@ -147,7 +139,7 @@ function setPlayCell(cell,x,y){
           flagPiece(x,y);
         }
         else {
-          if(firstClick == true){
+          if(firstClick == true){ //if first click, do not allow player to click onto mine
             tiles[x][y].mine = undefined;
             firstClick = false;
           }
@@ -191,15 +183,15 @@ function Mine(row, column){ //mine class, contains image, position
   this.flagged = false;
 }
 
-function defaultBoardInit(){
-  mines = new Array(); //array that holds all active pieces
+function defaultBoardInit(){ //board initialization
+  mines = new Array(); //1d array that holds all active pieces
   turns = 0;
   let mineX, mineY;
   let mineCount = g.BOARD_X * g.BOARD_Y * g.DIFF;
-  for(let i = 0; i <= mineCount; i++){
+  for(let i = 0; i <= mineCount; i++){ //place mines on board
     mineX = Math.floor(Math.random()*g.BOARD_X);
     mineY = Math.floor(Math.random()*g.BOARD_Y);
-    if(tiles[mineX][mineY].mine == undefined){
+    if(tiles[mineX][mineY].mine == undefined){//only places mine if a previous mine does not exist in that tile
       tiles[mineX][mineY].mine = new Mine(mineY, mineX);
       mines.push(tiles[mineX][mineY].mine);
       replaceImages();
@@ -211,20 +203,14 @@ function defaultBoardInit(){
   replaceImages();
 }
 
-function setMine(mine,x,y){
-  /* console.log('mine:');
-  console.log('mine.column:' + mine.column);
-  console.log('mine.row:' + mine.row);
-  console.log('x:' + x);
-  console.log('y:' + y);
-  console.log('tiles[x][y].mine:' + mine.column);*/
+function setMine(mine,x,y){ //set new mine position
   mine.column = x;
   mine.row = y;
   tiles[x][y].mine = mine;
 }
 
-function replaceImages(){
-  for(let x = 0; x < tiles.length; x++){
+function replaceImages(){ //update all visual elements
+  for(let x = 0; x < tiles.length; x++){ //go through all tiles
     for(let y = 0; y < tiles[x].length; y++){
       let tile = tiles[x][y].cell;
       while(tile.hasChildNodes()){ //get rid of all current elements to add image
@@ -232,21 +218,20 @@ function replaceImages(){
       }
       try{
         if(tiles[x][y].mine.visible == true){
-          //console.log(mines[i].img); //debug
-          tile.appendChild(tiles[x][y].mine.img); //add the current piece image to the tile
+          tile.appendChild(tiles[x][y].mine.img); //add mine image to tile if mine is supposed to be visible
         }
       } catch(e){}
-      if(tiles[x][y].revealed == true && checkAdj(x,y) != 0 && tiles[x][y].flagged == false){
+      if(tiles[x][y].revealed == true && checkAdj(x,y) != 0 && tiles[x][y].flagged == false){ //adjacent mine indicator
         let img = new Image();
         img.src = 'assets/' + checkAdj(x,y) +'.png';
         tiles[x][y].img = img;
       }
-      else if(checkAdj(x,y) == 0 && tiles[x][y].flagged == false) tiles[x][y].img = undefined;
+      else if(checkAdj(x,y) == 0 && tiles[x][y].flagged == false) tiles[x][y].img = undefined; //resets image in case of no adjacent mines
       if(tiles[x][y].img != undefined) tile.appendChild(tiles[x][y].img);
     }
   }
   document.getElementById("currentscore").innerHTML = '<strong>Current Score: </strong><br /> Level ' + level + ' - Tiles Revealed: ' + countRevealed(); //set current score text
-  if (typeof(Storage) !== "undefined") { //if browser supports localStorage
+  if (typeof(Storage) !== "undefined") { //sets element text if browser supports localStorage
     let text = '';
     if(localStorage.rnglevel == undefined) text = 'None';
     else if(level < localStorage.rnglevel) text = 'Level ' + localStorage.rnglevel + ' - Tiles Revealed: ' + localStorage.rngrevealed;
@@ -258,10 +243,10 @@ function replaceImages(){
   }
 }
 
-function revealPiece(x,y,m){ //reveals single tile
+function revealPiece(x,y,m){ //reveals single tile x,y - m is the boolean to determine whether mines are moved and adjacent tiles are revealed
   replaceImages();
   let tile = tiles[x][y];
-  if(tile.mine != undefined){
+  if(tile.mine != undefined){ //if mine is on piece
     tile.revealed = true;
     tile.mine.visible = true;
     tile.cell.classList.remove('bg');
@@ -323,7 +308,7 @@ function countRevealed(){
   return r;
 }
 
-function gameOver(){
+function gameOver(){ //game over function
   alert('Game Over!');
   toggleHide();
   g.end = true;
@@ -331,17 +316,17 @@ function gameOver(){
   else if (level == localStorage.rnglevel && countRevealed() > localStorage.rngrevealed) saveScore();
 }
 
-function saveScore(){
+function saveScore(){ //saves score to local browser storage
   localStorage.setItem("rnglevel", level);
   localStorage.setItem("rngrevealed", countRevealed());
 }
 
-function gameWin(){
+function gameWin(){//game win testing function
   alert('You Win!');
   g.end = true;
 }
 
-function progress(){
+function progress(){ //progresses level
   let bSize = g.BOARD_X += 1;
   let diff = g.DIFF;
   g = new Game(bSize,diff);
@@ -357,7 +342,7 @@ function toggleHide(){ //toggles if mines are hidden, debugging
   }
 }
 
-function checkAdj(x,y){
+function checkAdj(x,y){//checks number of mines in adjacent tiles
   let adjMineCount = 0;
     for(let i = x-1; i < x+2; i++){
       for(let j = y-1; j < y+2; j++){
@@ -380,7 +365,7 @@ function clearScore(){ //debugging, clears high scores
 
 function flagPiece(x,y){ // flags single tile
   let tile = tiles[x][y];
-  if(tile.cell.classList.contains('flag')){
+  if(tile.cell.classList.contains('flag')){//if flag already exists, remove flag
     tile.cell.classList.remove('flag');
     tile.cell.classList.add('bg');
     if(tile.mine != undefined) tile.mine.flagged = false;
