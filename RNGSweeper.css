@@ -19,23 +19,23 @@ canvas {
 
 h1 {
   position: absolute;
-  top: 50px;
-  left: 125px;
-  font: 24px Lucida, monospace;
+  top: 5vh;
+  left: 5vw;
+  font: 20px Lucida, monospace;
 }
 
 h2 {
   position: absolute;
-  bottom: 50px;
-  left: 125px;
-  font: 24px Lucida, monospace;
+  bottom: 5vh;
+  left: 5vw;
+  font: 20px Lucida, monospace;
 }
 
 h3 {
   position: absolute;
-  top: 50px;
-  right: 300px;
-  font: 24px Lucida, monospace;
+  top: 5vh;
+  right: 10vw;
+  font: 20px Lucida, monospace;
 }
 
 td{
