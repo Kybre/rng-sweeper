@@ -135,7 +135,7 @@ function setPlayCell(cell,x,y){
   cell.id = x+','+y;
   cell.onmousedown = function(e){ //mouse event listener
     if(g.end == false){ //if game hasn't ended
-      if(e.which == 3 || e.button == 2){ // on right click
+      if(e.which == 3 || e.button == 2 || e.ctrlKey == true){ // on right click or control click
         flagPiece(x,y);
       }
       else {
@@ -153,8 +153,8 @@ function setPlayCell(cell,x,y){
             }
             firstClick = false;
           }
-          revealPiece(x,y,true);
-        }
+        revealPiece(x,y,true);
+      }
     }
   }
 }
