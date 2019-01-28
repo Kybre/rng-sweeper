@@ -133,19 +133,29 @@ function setPlayCell(cell,x,y){
   tiles[x][y].revealed = false;
   tiles[x][y].flagged = false;
   cell.id = x+','+y;
-    cell.onmousedown = function(e){ //mouse event listener
-      if(g.end == false){ //if game hasn't ended
-        if(e.which == 3 || e.button == 2){ // on right click
-          flagPiece(x,y);
-        }
-        else {
-          if(firstClick == true){ //if first click, do not allow player to click onto mine
-            tiles[x][y].mine = undefined;
+  cell.onmousedown = function(e){ //mouse event listener
+    if(g.end == false){ //if game hasn't ended
+      if(e.which == 3 || e.button == 2){ // on right click
+        flagPiece(x,y);
+      }
+      else {
+        if(firstClick == true){ //if first click, any space the player clicks on should be blank with no adjacent tiles
+          tiles[x][y].mine = undefined;
+          for(let i = x-1; i < x+2; i++){
+            for(let j = y-1; j < y+2; j++){
+              if(tiles[i] != undefined){
+                if(tiles[i][j] != undefined){
+                    tiles[i][j].mine = undefined; //set all adjacent mines to undefined
+                    revealPiece(i,j,false);
+                  }
+                }
+              }
+            }
             firstClick = false;
           }
           revealPiece(x,y,true);
         }
-      }
+    }
   }
 }
 
@@ -221,12 +231,14 @@ function replaceImages(){ //update all visual elements
           tile.appendChild(tiles[x][y].mine.img); //add mine image to tile if mine is supposed to be visible
         }
       } catch(e){}
-      if(tiles[x][y].revealed == true && checkAdj(x,y) != 0 && tiles[x][y].flagged == false){ //adjacent mine indicator
-        let img = new Image();
-        img.src = 'assets/' + checkAdj(x,y) +'.png';
-        tiles[x][y].img = img;
+      if(tiles[x][y].revealed == true && tiles[x][y].flagged == false){
+        if(checkAdj(x,y) != 0){ //adjacent mine indicator
+          let img = new Image();
+          img.src = 'assets/' + checkAdj(x,y) +'.png';
+          tiles[x][y].img = img;
+        }
+        else if(checkAdj(x,y) == 0) tiles[x][y].img = undefined; //resets image in case of no adjacent mines\
       }
-      else if(checkAdj(x,y) == 0 && tiles[x][y].flagged == false) tiles[x][y].img = undefined; //resets image in case of no adjacent mines
       if(tiles[x][y].img != undefined) tile.appendChild(tiles[x][y].img);
     }
   }
